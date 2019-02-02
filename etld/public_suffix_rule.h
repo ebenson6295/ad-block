@@ -8,30 +8,54 @@
 
 #include <string>
 #include <vector>
+#include <exception>
 #include "./domain.h"
 #include "./types.h"
 
 namespace Brave {
 namespace eTLD {
 
+class PublicSuffixRuleInputException : public std::exception {
+  public:
+    PublicSuffixRuleInputException(const char* message) : msg_(message) {}
+    virtual const char* what() const throw() {
+      return msg_.c_str();
+    }
+
+    virtual ~PublicSuffixRuleInputException() throw () {}
+
+  protected:
+    std::string msg_;
+};
+
+
 class PublicSuffixRule {
   public:
-    PublicSuffixRule(const std::string &raw_text);
+    PublicSuffixRule() {};
+    PublicSuffixRule(const std::string &rule_text);
+    PublicSuffixRule(std::vector<Label> labels, bool is_exception, bool is_wildcard) :
+      labels_(labels),
+      is_exception_(is_exception),
+      is_wildcard_(is_wildcard) {};
 
-    bool matches(const Domain &domain) const;
-    bool isException() const {
+    bool Equals(const PublicSuffixRule &rule) const;
+    bool Matches(const Domain &domain) const;
+    std::string ToString() const;
+
+    std::vector<Label> Labels() const {
+      return labels_;
+    }
+    bool IsException() const {
       return is_exception_;
     };
-    bool isWildcard() const {
+    bool IsWildcard() const {
       return is_wildcard_;
     }
 
   protected:
-    void parseRule(const std::string &rule_text);
-
     std::vector<Label> labels_;
-    bool is_exception_;
-    bool is_wildcard_;
+    bool is_exception_ = false;
+    bool is_wildcard_ = false;
 };
 
 }

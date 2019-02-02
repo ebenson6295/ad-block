@@ -16,24 +16,17 @@ namespace eTLD {
 
 class Domain {
   public:
-    Domain(const std::string &domain) {
-      std::size_t current, previous = 0;
-      current = domain.find(".");
-      while (current != std::string::npos) {
-          labels_.push_back(domain.substr(previous, current - previous));
-          previous = current + 1;
-          current = domain.find(".", previous);
-      }
-      if (previous != 0) {
-        labels_.push_back(domain.substr(previous, current - previous));
-      }
-    };
+    const Label& operator[](std::size_t idx) const {
+      return labels_[idx];
+    }
 
-    int length() const {
+    Domain(const std::string &domain);
+
+    int Length() const {
       return labels_.size();
     }
 
-    std::string toString() const;
+    std::string ToString() const;
 
   protected:
     std::vector<Label> labels_;

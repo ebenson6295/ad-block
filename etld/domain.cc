@@ -9,10 +9,34 @@
 namespace Brave {
 namespace eTLD {
 
-std::string Domain::toString() const {
+Domain::Domain(const std::string &string) {
+  std::size_t current, previous = 0;
+  current = string.find(".");
+  if (current == std::string::npos) {
+    labels_.push_back(string);
+    return;
+  }
+
+  while (current != std::string::npos) {
+    labels_.push_back(string.substr(previous, current - previous));
+    previous = current + 1;
+    current = string.find(".", previous);
+  }
+
+  if (previous != 0) {
+    labels_.push_back(string.substr(previous, current - previous));
+  }
+}
+
+std::string Domain::ToString() const {
   std::stringstream asString;
+  int num_labels = labels_.size();
+  int i = 0;
   for (auto &&str : labels_) {
     asString << str;
+    if (i != num_labels - 1) {
+      asString << ".";
+    }
   }
   return asString.str();
 }

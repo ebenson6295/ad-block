@@ -11,6 +11,7 @@
 namespace Brave {
 namespace eTLD {
 
+
 typedef std::string Label;
 
 }
