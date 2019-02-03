@@ -1,5 +1,5 @@
-/* Copyright (c) 2015 Brian R. Bondy. Distributed under the MPL2 license.
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2018 The Brave Software Team. Distributed under the MPL2
+ * license. This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -37,7 +37,7 @@ void PublicSuffixParseResult::AddParseResult(const PublicSuffixTextLineParseResu
 }
 
 
-PublicSuffixParseResult parse_rule_file(std::ifstream rule_file) {
+PublicSuffixParseResult parse_rule_file(std::ifstream &rule_file) {
   std::vector<PublicSuffixRule> rules;
   std::string line;
   PublicSuffixParseResult results;
@@ -72,7 +72,7 @@ PublicSuffixTextLineParseResult parse_rule_line(const std::string &line) {
     return result;
   }
 
-  size_t first_non_white_space_char = line.find_first_not_of(" ");
+  std::size_t first_non_white_space_char = line.find_first_not_of(" ");
   // Next, check to see if the line is only whitespace.
   if (first_non_white_space_char == std::string::npos) {
     result.type = PublicSuffixTextLineTypeWhitespace;

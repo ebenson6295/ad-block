@@ -1,5 +1,5 @@
-/* Copyright (c) 2015 Brian R. Bondy. Distributed under the MPL2 license.
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2018 The Brave Software Team. Distributed under the MPL2
+ * license. This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -62,7 +62,7 @@ class PublicSuffixParseResult {
 
 // This attempts to implement the algorithm described here:
 //   https://www.publicsuffix.org/list/
-PublicSuffixParseResult parse_rule_file(std::ifstream rule_file);
+PublicSuffixParseResult parse_rule_file(std::ifstream &rule_file);
 PublicSuffixParseResult parse_rule_text(const std::string &rule_text);
 PublicSuffixTextLineParseResult parse_rule_line(const std::string &line);
 

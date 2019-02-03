@@ -1,5 +1,5 @@
-/* Copyright (c) 2015 Brian R. Bondy. Distributed under the MPL2 license.
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2018 The Brave Software Team. Distributed under the MPL2
+ * license. This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -17,7 +17,9 @@ namespace eTLD {
 
 class PublicSuffixRuleInputException : public std::exception {
   public:
-    PublicSuffixRuleInputException(const char* message) : msg_(message) {}
+    PublicSuffixRuleInputException(const char * message) : msg_(message) {}
+    PublicSuffixRuleInputException(const std::string &message) : msg_(message) {}
+
     virtual const char* what() const throw() {
       return msg_.c_str();
     }
@@ -40,14 +42,23 @@ class PublicSuffixRule {
 
     bool Equals(const PublicSuffixRule &rule) const;
     bool Matches(const Domain &domain) const;
+    DomainInfo Apply(const Domain &domain) const;
+
     std::string ToString() const;
+    std::string DomainString() const;
 
     std::vector<Label> Labels() const {
       return labels_;
     }
+
+    std::vector<Label>::size_type Length() const {
+      return labels_.size();
+    }
+
     bool IsException() const {
       return is_exception_;
     };
+
     bool IsWildcard() const {
       return is_wildcard_;
     }

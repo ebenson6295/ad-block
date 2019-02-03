@@ -1,8 +1,9 @@
-/* Copyright (c) 2015 Brian R. Bondy. Distributed under the MPL2 license.
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2018 The Brave Software Team. Distributed under the MPL2
+ * license. This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <iostream>
 #include <string>
 #include "./domain.h"
 #include "./public_suffix_rule.h"
@@ -42,7 +43,7 @@ PublicSuffixRule::PublicSuffixRule(const std::string &rule_text) {
       break;
 
     case '/':
-      throw PublicSuffixRuleInputException("Rules cannot start with '/'");
+      throw PublicSuffixRuleInputException("Rules cannot start with '/': " + rule_text);
       break;
 
     default:
@@ -55,7 +56,7 @@ PublicSuffixRule::PublicSuffixRule(const std::string &rule_text) {
   while (current != std::string::npos) {
     current_label = trimmed_rule_text.substr(previous, current - previous);
     if (current_label.length() == 0) {
-      throw PublicSuffixRuleInputException("Rules cannot contain adjectent delimitors");
+      throw PublicSuffixRuleInputException("Rules cannot contain adjectent delimitors: " + rule_text);
     }
     labels_.push_back(current_label);
     previous = current + 1;
@@ -65,7 +66,7 @@ PublicSuffixRule::PublicSuffixRule(const std::string &rule_text) {
   // If don't include any trailing whitespace, if there is any.
   current_label = trimmed_rule_text.substr(previous, current - previous);
   if (current_label == "") {
-    throw PublicSuffixRuleInputException("Rules cannot end with a delimiter");
+    throw PublicSuffixRuleInputException("Rules cannot end with a delimiter: " + rule_text);
   }
 
   labels_.push_back(current_label);
@@ -84,22 +85,24 @@ bool PublicSuffixRule::Equals(const PublicSuffixRule &rule) const {
 bool PublicSuffixRule::Matches(const Domain &domain) const {
   // When the domain and rule are split into corresponding labels, that the
   // domain contains as many or more labels than the rule.
-  std::vector<Label> labels(Labels());
-  int num_labels = labels.size();
-  if (num_labels > domain.Length()) {
+  auto num_rule_labels = labels_.size();
+  auto num_domain_labels = domain.Length();
+  if (num_rule_labels > num_domain_labels) {
     return false;
   }
 
   // Beginning with the right-most labels of both the domain and the rule, and
   // continuing for all labels in the rule, one finds that for every pair,
   // either they are identical, or that the label from the rule is "*".
-  for (int i = num_labels - 1; i >= 0; i -= 1) {
-    std::string rule_label = labels[i];
+  for (unsigned long i = 0; i < num_rule_labels; i += 1) {
+    Label rule_label = labels_[num_rule_labels - i - 1];
+    Label domain_label = domain.Get(num_domain_labels - i - 1);
+
     if (rule_label == "*") {
       continue;
     }
 
-    if (labels[i] != domain[i]) {
+    if (rule_label != domain_label) {
       return false;
     }
   }
@@ -107,18 +110,80 @@ bool PublicSuffixRule::Matches(const Domain &domain) const {
   return true;
 }
 
-std::string PublicSuffixRule::ToString() const {
-  std::stringstream asString;
-  asString << "labels: [";
-  for (auto &&str : labels_) {
-    asString << str << ", ";
+DomainInfo PublicSuffixRule::Apply(const Domain &domain) const {
+  DomainInfo domain_info;
+
+  auto domain_length = domain.Length();
+  auto rule_length = Length();
+  if (IsException()) {
+    rule_length -= 1;
   }
-  asString << "] ";
 
-  asString << "is exception: " << (is_exception_ ? "true" : "false") << " ";
-  asString << "is wildcard: " << ( is_wildcard_ ? "true" : "false");
+  auto tld_segment_length = rule_length;
+  std::stringstream tld_segment;
 
-  return asString.str();
+  auto domain_segment_length = (tld_segment_length == domain_length) ? 0 : 1;
+  std::stringstream domain_segment;
+
+  auto sub_domain_segment_length = domain_length - domain_segment_length - tld_segment_length;
+  std::stringstream sub_domain_segment;
+ 
+  Label domain_label;
+  for (unsigned long i = 0; i < domain_length; i += 1) {
+    domain_label = domain.Get(i);
+
+    if (sub_domain_segment_length > 0) {
+      sub_domain_segment_length -= 1;
+      sub_domain_segment << domain_label;
+      if (sub_domain_segment_length != 0) {
+        sub_domain_segment << ".";
+      }
+      continue;
+    }
+
+    if (domain_segment_length > 0) {
+      domain_segment_length -= 1;
+      domain_segment << domain_label;
+      if (domain_segment_length != 0) {
+        domain_segment << ".";
+      }
+      continue;
+    }
+
+    tld_segment_length -= 1;
+    tld_segment << domain_label;
+    if (tld_segment_length != 0) {
+      tld_segment << ".";
+    }
+  }
+
+  domain_info.tld = tld_segment.str();
+  domain_info.domain = domain_segment.str();
+  domain_info.subdomain = sub_domain_segment.str();
+  return domain_info;
+}
+
+std::string PublicSuffixRule::DomainString() const {
+  auto last_label_index = labels_.size() - 1;
+  unsigned long label_index = 0;
+  std::stringstream as_string;
+  for (auto &&elm : labels_) {
+    as_string << elm;
+    if (label_index != last_label_index) {
+      as_string << ".";
+    }
+    label_index += 1;
+  }
+
+  return as_string.str();
+}
+
+std::string PublicSuffixRule::ToString() const {
+  std::stringstream as_string;
+  as_string << "labels: [" << DomainString() << "] ";
+  as_string << "is exception: " << (is_exception_ ? "true" : "false") << " ";
+  as_string << "is wildcard: " << ( is_wildcard_ ? "true" : "false");
+  return as_string.str();
 }
 
 

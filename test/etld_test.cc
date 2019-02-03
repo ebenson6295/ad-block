@@ -7,11 +7,16 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <fstream>
 #include "./CppUnitLite/TestHarness.h"
 #include "./CppUnitLite/Test.h"
+#include "./etld/types.h"
+#include "./etld/matcher.h"
+#include "./etld/shared_matcher.h"
 #include "./etld/parser.h"
 #include "./etld/domain.h"
 #include "./etld/public_suffix_rule.h"
+#include "./etld/public_suffix_rule_set.h"
 
 using std::string;
 using std::cout;
@@ -20,7 +25,12 @@ using std::endl;
 using Brave::eTLD::PublicSuffixTextLineType;
 using Brave::eTLD::PublicSuffixTextLineParseResult;
 using Brave::eTLD::PublicSuffixRuleInputException;
+using Brave::eTLD::PublicSuffixRuleSetMatchResult;
 using Brave::eTLD::PublicSuffixRule;
+using Brave::eTLD::PublicSuffixRuleSet;
+using Brave::eTLD::Domain;
+using Brave::eTLD::Matcher;
+using Brave::eTLD::DomainInfo;
 
 bool testParsePublicSuffixTestLineNoOps(const std::string &line, PublicSuffixTextLineType expectedType) {
   PublicSuffixTextLineParseResult result = Brave::eTLD::parse_rule_line(line);
@@ -36,7 +46,7 @@ bool testParsePublicSuffixTestLineError(const std::string &line, const std::stri
   try {
     PublicSuffixRule rule(line);
   } catch (PublicSuffixRuleInputException error) {
-    if (error.what() != expected_error) {
+    if (std::string(error.what()).find_first_of(expected_error) == std::string::npos) {
       cout << "Caught an unexpected error when parsing " << line << "\n"
            << "Expected '" << expected_error << "'\n"
            << "Received '" << error.what() << endl;
@@ -61,16 +71,14 @@ bool testParsePublicSuffixTest(
   return currect_rule.Equals(rule);
 }
 
-bool testParsePublicSuffixTextTest(
-    const std::string &text,
+bool _verifyParsePublicSuffixTest(
+    Brave::eTLD::PublicSuffixParseResult result,
     int num_expected_rules,
     int num_expected_exception_rules,
     int num_expected_wildcard_rules,
     int num_expected_whitespace_lines,
     int num_expected_comment_lines,
     int num_expected_invalid_lines) {
-  Brave::eTLD::PublicSuffixParseResult result = Brave::eTLD::parse_rule_text(text);
-
   if (num_expected_rules != result.Rules().size()) {
     cout << "Incorrect number of rules parsed, expected '" << num_expected_rules << "' "
          << "but found '" << result.Rules().size() << "'" << endl;
@@ -121,9 +129,51 @@ bool testParsePublicSuffixTextTest(
   return true;
 }
 
-bool testMatchingDomainRules(const std::string &rule_str, const std::string &domain_str, bool should_match) {
-  Brave::eTLD::Domain domain(domain_str);
-  Brave::eTLD::PublicSuffixRule rule(rule_str);
+bool testParsePublicSuffixTextTest(
+    const std::string &text,
+    int num_expected_rules,
+    int num_expected_exception_rules,
+    int num_expected_wildcard_rules,
+    int num_expected_whitespace_lines,
+    int num_expected_comment_lines,
+    int num_expected_invalid_lines) {
+  Brave::eTLD::PublicSuffixParseResult result = Brave::eTLD::parse_rule_text(text);
+  return _verifyParsePublicSuffixTest(
+    result,
+    num_expected_rules,
+    num_expected_exception_rules, 
+    num_expected_wildcard_rules,
+    num_expected_whitespace_lines,
+    num_expected_comment_lines, 
+    num_expected_invalid_lines
+  );
+}
+
+bool testParsePublicSuffixFileTest(
+    const std::string &file_path, 
+    int num_expected_rules,
+    int num_expected_exception_rules,
+    int num_expected_wildcard_rules,
+    int num_expected_whitespace_lines,
+    int num_expected_comment_lines,
+    int num_expected_invalid_lines) {
+  std::ifstream rule_file;
+  rule_file.open(file_path, std::ifstream::in);
+  Brave::eTLD::PublicSuffixParseResult result = Brave::eTLD::parse_rule_file(rule_file);
+  return _verifyParsePublicSuffixTest(
+    result,
+    num_expected_rules,
+    num_expected_exception_rules, 
+    num_expected_wildcard_rules,
+    num_expected_whitespace_lines,
+    num_expected_comment_lines, 
+    num_expected_invalid_lines
+  );
+}
+
+bool testMatchingDomainRules(const string &rule_str, const string &domain_str, bool should_match) {
+  Domain domain(domain_str);
+  PublicSuffixRule rule(rule_str);
 
   bool does_match = rule.Matches(domain);
   if (should_match != does_match) {
@@ -133,7 +183,86 @@ bool testMatchingDomainRules(const std::string &rule_str, const std::string &dom
     );
     cout << "Domain: '" << domain.ToString() << "' "
          << desc
-         << "Rule: '" << rule.ToString() << "'";
+         << "Rule: '" << rule.ToString() << "'" << endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool testPublicSuffixRuleSetMatch(const std::vector<string> &rules, const string &domain_str, const string &expected_match) {
+  PublicSuffixRuleSet rule_set;
+  PublicSuffixRule rule;
+  for (auto &elm : rules) {
+    rule = PublicSuffixRule(elm);
+    rule_set.AddRule(rule);
+  }
+
+  Domain test_domain(domain_str);
+  PublicSuffixRuleSetMatchResult match_result = rule_set.Match(test_domain);
+  string result_string = match_result.rule.DomainString();
+  if (result_string != expected_match) {
+    cout << "Expected rule: '" << expected_match << "' "
+         << "to match '" << domain_str << "' "
+         << "but received '" << result_string << "'" << endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool testPublicSuffixRuleTextApply(const string &rule_str, const string &domain_str, const DomainInfo &expected) {
+  PublicSuffixRule rule(rule_str);
+  Domain domain(domain_str);
+  DomainInfo extracted = rule.Apply(domain);
+  if (extracted.tld != expected.tld) {
+    cout << "Expected tld of '" << expected.tld << "' when applying rule '"
+         << rule_str << "' to domain '" << domain_str
+         << "', but received tld << '" << extracted.tld << "'" << endl;
+    return false;
+  }
+
+  if (extracted.domain != expected.domain) {
+    cout << "Expected domain of '" << expected.domain << "' when applying rule '"
+         << rule_str << "' to domain '" << domain_str
+         << "', but received domain << '" << extracted.domain << "'" << endl;
+    return false;
+  }
+
+  if (extracted.subdomain != expected.subdomain) {
+    cout << "Expected subdomain of '" << expected.subdomain << "' when applying rule '"
+         << rule_str << "' to domain '" << domain_str
+         << "', but received subdomain << '" << extracted.subdomain << "'" << endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool testPublicSuffixRuleFileApply(const string &file_path, const string &domain_str, const DomainInfo &expected) {
+  std::ifstream rule_file;
+  rule_file.open(file_path, std::ifstream::in);
+  Matcher matcher(rule_file);
+  DomainInfo extracted = matcher.Match(Domain(domain_str));
+
+  if (extracted.tld != expected.tld) {
+    cout << "Expected tld of '" << expected.tld << "' when applying file '"
+         << file_path << "' to domain '" << domain_str
+         << "', but received tld << '" << extracted.tld << "'" << endl;
+    return false;
+  }
+
+  if (extracted.domain != expected.domain) {
+    cout << "Expected domain of '" << expected.domain << "' when applying file '"
+         << file_path << "' to domain '" << domain_str
+         << "', but received domain << '" << extracted.domain << "'" << endl;
+    return false;
+  }
+
+  if (extracted.subdomain != expected.subdomain) {
+    cout << "Expected subdomain of '" << expected.subdomain << "' when applying file '"
+         << file_path << "' to domain '" << domain_str
+         << "', but received subdomain << '" << extracted.subdomain << "'" << endl;
     return false;
   }
 
@@ -255,6 +384,13 @@ TEST(eTLDParseRulesText, basic) {
   );
 }
 
+TEST(eTLDParseRulesFile, basic) {
+  CHECK(testParsePublicSuffixFileTest(
+    "./test/data/public_suffix_list_short.txt",
+    32, 1, 1, 8, 12, 0
+  ))
+}
+
 TEST(eTLDMatchTests, basic) {
   CHECK(testMatchingDomainRules(
       "com", "com", true
@@ -262,6 +398,10 @@ TEST(eTLDMatchTests, basic) {
   );
   CHECK(testMatchingDomainRules(
       "fp.com", "com", false
+    )
+  );
+  CHECK(testMatchingDomainRules(
+      "com", "fp.com", true
     )
   );
   CHECK(testMatchingDomainRules(
@@ -280,4 +420,177 @@ TEST(eTLDMatchTests, basic) {
       "*.tokyo.jp", "other.tokyo.jp", true
     )
   );
+  CHECK(testMatchingDomainRules(
+      "com", "foo.com", true
+    )
+  );
+}
+
+TEST(eTLDPublicSuffixRuleSetMatchTests, basic) {
+  CHECK(testPublicSuffixRuleSetMatch(
+      {"com", "*.jp", "*.hokkaido.jp"},
+      "foo.com",
+      "com"
+    )
+  );
+  CHECK(testPublicSuffixRuleSetMatch(
+      {"com", "*.jp", "*.hokkaido.jp"},
+      "hokkaido.jp",
+      "*.jp"
+    )
+  );
+  CHECK(testPublicSuffixRuleSetMatch(
+      {"com", "*.jp", "*.hokkaido.jp"},
+      "pete.hokkaido.jp",
+      "*.hokkaido.jp"
+    )
+  );
+  CHECK(testPublicSuffixRuleSetMatch(
+      {"com", "*.jp", "*.hokkaido.jp"},
+      "horse.shoes",
+      ""
+    )
+  );
+}
+
+TEST(eTLDPublicSuffixRuleApplyTestTests, basic) {
+  DomainInfo test_one_expected_match = {"example.jp", "shoes", "pete"};
+  CHECK(testPublicSuffixRuleTextApply(
+      "*.jp", "pete.shoes.example.jp", test_one_expected_match
+    )
+  );
+
+  DomainInfo test_two_expected_match = {"horse", "the", "we.love"};
+  CHECK(testPublicSuffixRuleTextApply(
+      "horse", "we.love.the.horse", test_two_expected_match
+    )
+  );
+
+  DomainInfo test_three_expected_match = {"tokyo.jp", "metro", "slate"};
+  CHECK(testPublicSuffixRuleTextApply(
+      "!metro.tokyo.jp", "slate.metro.tokyo.jp", test_three_expected_match
+    )
+  );
+}
+
+TEST(eTLDPublicSuffixRuleApplyFileTests, basic) {
+  DomainInfo file_test_one = {"com", "google", "www"};
+  CHECK(testPublicSuffixRuleFileApply(
+      "./etld/data/public_suffix_list.dat",
+      "www.google.com",
+      file_test_one
+    )
+  );
+
+  DomainInfo file_test_two = {"co.uk", "google", ""};
+  CHECK(testPublicSuffixRuleFileApply(
+      "./etld/data/public_suffix_list.dat",
+      "google.co.uk",
+      file_test_two
+    )
+  );
+
+  // Tests taken from https://www.npmjs.com/package/tldts
+  DomainInfo file_test_three = {"s3.amazonaws.com", "spark-public", ""};
+  CHECK(testPublicSuffixRuleFileApply(
+      "./etld/data/public_suffix_list.dat",
+      "spark-public.s3.amazonaws.com",
+      file_test_three
+    )
+  );
+
+  DomainInfo file_test_four = {"org", "writethedocs", "www"};
+  CHECK(testPublicSuffixRuleFileApply(
+      "./etld/data/public_suffix_list.dat",
+      "www.writethedocs.org",
+      file_test_four
+    )
+  );
+
+  // Tests taken from https://www.npmjs.com/package/tld
+  DomainInfo file_test_five = {"bar.sch.uk", "foo", "www"};
+  CHECK(testPublicSuffixRuleFileApply(
+      "./etld/data/public_suffix_list.dat",
+      "www.foo.bar.sch.uk",
+      file_test_five
+    )
+  );
+
+  // Tests taken from https://www.npmjs.com/package/parse-domain
+  DomainInfo file_test_six = {"co.uk", "example", "some.subdomain"};
+  CHECK(testPublicSuffixRuleFileApply(
+      "./etld/data/public_suffix_list.dat",
+      "some.subdomain.example.co.uk",
+      file_test_six
+    )
+  );
+
+  // Tests adapted from
+  // https://raw.githubusercontent.com/publicsuffix/list/master/tests/test_psl.txt
+  struct DomainInfoTestCase {
+    string input;
+    DomainInfo expected;
+  };
+  DomainInfoTestCase file_test_cases[] = {
+    {"com", {"com", "", ""}},
+    {"example.com", {"com", "example", ""}},
+    {"www.example.com", {"com", "example", "www"}},
+    {"example", {"example", "", ""}},
+    {"example.example", {"example", "example", ""}},
+    {"b.example.example", {"example", "example", "b"}},
+    {"a.b.example.example", {"example", "example", "a.b"}},
+    {"biz", {"biz", "", ""}},
+    {"domain.biz", {"biz", "domain", ""}},
+    {"b.domain.biz", {"biz", "domain", "b"}},
+    {"uk.com", {"uk.com", "", ""}},
+    {"example.uk.com", {"uk.com", "example", ""}},
+    {"b.example.uk.com", {"uk.com", "example", "b"}},
+    {"a.b.example.uk.com", {"uk.com", "example", "a.b"}},
+    {"jp", {"jp", "", ""}},
+    {"test.jp", {"jp", "test", ""}},
+    {"www.test.jp", {"jp", "test", "www"}},
+    {"ac.jp", {"ac.jp", "", ""}},
+    {"test.ac.jp", {"ac.jp", "test", ""}},
+    {"www.test.ac.jp", {"ac.jp", "test", "www"}},
+    {"kyoto.jp", {"kyoto.jp", "", ""}},
+    {"test.kyoto.jp", {"kyoto.jp", "test", ""}},
+    {"ide.kyoto.jp", {"ide.kyoto.jp", "", ""}},
+    {"b.ide.kyoto.jp", {"ide.kyoto.jp", "b", ""}},
+    {"a.b.ide.kyoto.jp", {"ide.kyoto.jp", "b", "a"}},
+    {"c.kobe.jp", {"c.kobe.jp", "", ""}},
+    {"b.c.kobe.jp", {"c.kobe.jp", "b", ""}},
+    {"a.b.c.kobe.jp", {"c.kobe.jp", "b", "a"}},
+    {"city.kobe.jp", {"kobe.jp", "city", ""}},
+    {"www.city.kobe.jp", {"kobe.jp", "city", "www"}},
+    {"ck", {"ck", "", ""}},
+    {"test.ck", {"test.ck", "", ""}},
+    {"b.test.ck", {"test.ck", "b", ""}},
+    {"a.b.test.ck", {"test.ck", "b", "a"}},
+    {"www.ck", {"ck", "www", ""}},
+    {"www.www.ck", {"ck", "www", "www"}},
+    {"us", {"us", "", ""}},
+    {"test.us", {"us", "test", ""}},
+    {"www.test.us", {"us", "test", "www"}},
+    {"ak.us", {"ak.us", "", ""}},
+    {"test.ak.us", {"ak.us", "test", ""}},
+    {"www.test.ak.us", {"ak.us", "test", "www"}},
+    {"k12.ak.us", {"k12.ak.us", "", ""}},
+    {"test.k12.ak.us", {"k12.ak.us", "test", ""}},
+    {"www.test.k12.ak.us", {"k12.ak.us", "test", "www"}},
+    {"食狮.com.cn", {"com.cn", "食狮", ""}},
+    {"食狮.公司.cn", {"公司.cn", "食狮", ""}},
+    {"sushi.公司.cn", {"公司.cn", "sushi", ""}},
+    {"公司.cn", {"公司.cn", "", ""}},
+    {"食狮.中国", {"中国", "食狮", ""}},
+    {"shishi.中国", {"中国", "shishi", ""}},
+    {"中国", {"中国", "", ""}},
+  };
+  for (auto &elm : file_test_cases) {
+    CHECK(testPublicSuffixRuleFileApply(
+        "./etld/data/public_suffix_list.dat",
+        elm.input,
+        elm.expected
+      )
+    );
+  }
 }

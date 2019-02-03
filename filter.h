@@ -102,7 +102,7 @@ friend class AdBlockClient;
 
   // Checks to see if any filter matches the input but does not match
   // any exception rule You may want to call the first overload to be
-  // slighly more efficient
+  // slightly more efficient
   bool matches(const char *input, int inputLen,
       FilterOption contextOption = FONoFilterOption,
       const char *contextDomain = nullptr,
@@ -207,6 +207,11 @@ friend class AdBlockClient;
 
 bool isThirdPartyHost(const char *baseContextHost,
     int baseContextHostLen,
+    const char *testHost,
+    int testHostLen);
+
+bool isMatchingHostAnchor(const char *ruleHost,
+    int ruleHostLen,
     const char *testHost,
     int testHostLen);
 

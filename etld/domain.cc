@@ -1,5 +1,5 @@
-/* Copyright (c) 2015 Brian R. Bondy. Distributed under the MPL2 license.
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2018 The Brave Software Team. Distributed under the MPL2
+ * license. This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -28,17 +28,22 @@ Domain::Domain(const std::string &string) {
   }
 }
 
+Domain::Domain(const std::vector<Label> &labels) {
+  labels_ = labels;
+}
+
 std::string Domain::ToString() const {
-  std::stringstream asString;
-  int num_labels = labels_.size();
-  int i = 0;
+  std::stringstream as_string;
+  auto num_labels = labels_.size();
+  unsigned long i = 0;
   for (auto &&str : labels_) {
-    asString << str;
+    as_string << str;
     if (i != num_labels - 1) {
-      asString << ".";
+      as_string << ".";
     }
+    i += 1;
   }
-  return asString.str();
+  return as_string.str();
 }
 
 }

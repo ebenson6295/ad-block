@@ -9,6 +9,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include "./etld/shared_matcher.h"
 
 #ifdef ENABLE_REGEX
 #include <regex> // NOLINT
@@ -22,6 +23,8 @@
 #include "hash_set.h"
 
 static HashFn h(19);
+
+using namespace Brave::eTLD;
 
 const char * getUrlHost(const char *input, int *len);
 
@@ -343,17 +346,44 @@ bool endsWith(const char *input, const char *sub, int inputLen, int subLen) {
 
 bool isThirdPartyHost(const char *baseContextHost, int baseContextHostLen,
     const char *testHost, int testHostLen) {
-  if (!endsWith(testHost, baseContextHost, testHostLen, baseContextHostLen)) {
+  std::string baseDomainStr(baseContextHost, baseContextHostLen);
+  Domain baseDomain(baseDomainStr);
+  std::string testDomainStr(testHost, testHostLen);
+  Domain testDomain(testDomainStr);
+
+  Matcher eTldMatcher = SharedETLDMatcher::GetInstance().Matcher();
+  DomainInfo baseHostDomainInfo = eTldMatcher.Match(baseDomain);
+  DomainInfo testHostDomainInfo = eTldMatcher.Match(testDomain);
+
+  if (baseHostDomainInfo.tld != testHostDomainInfo.tld || 
+      baseHostDomainInfo.domain != testHostDomainInfo.domain) {
     return true;
   }
 
-  // baseContextHost matches testHost exactly
-  if (testHostLen == baseContextHostLen) {
+  return false;
+}
+
+bool isMatchingHostAnchor(const char *ruleHost, int ruleHostLen,
+    const char *testHost, int testHostLen) {
+  std::string ruleHostStr(ruleHost, ruleHostLen);
+  std::string testHostStr(testHost, testHostLen);
+  size_t lastSubstrIndex = testHostStr.rfind(ruleHostStr);
+  if (lastSubstrIndex == std::string::npos) {
     return false;
   }
 
-  char c = testHost[testHostLen - baseContextHostLen - 1];
-  return c != '.' && testHostLen != baseContextHostLen;
+  // If the domain in the rule does not appear at the end of the given
+  // host, then do not process further.
+  if ((int)lastSubstrIndex + ruleHostLen != testHostLen) {
+    return false;
+  }
+
+  // Finally, check and make sure that the domain in the rule is preceeded by
+  // either a "." or is the first character in the string.
+  if (lastSubstrIndex == 0 || testHostStr[lastSubstrIndex - 1] == '.') {
+    return true;
+  }
+  return false;
 }
 
 bool Filter::hasUnsupportedOptions() const {
@@ -583,7 +613,7 @@ bool Filter::matches(const char *input, int inputLen,
       }
     }
 
-    if (isThirdPartyHost(host, hostLen, currentHost, currentHostLen)) {
+    if (!isMatchingHostAnchor(host, hostLen, currentHost, currentHostLen)) {
       return false;
     }
   }
