@@ -21,7 +21,7 @@ class SharedETLDMatcher {
   SharedETLDMatcher(SharedETLDMatcher const&)= delete;
   void operator=(SharedETLDMatcher const&)= delete;
 
-  Matcher Matcher() const {
+  Matcher GetMatcher() const {
     return matcher_;
   }
 

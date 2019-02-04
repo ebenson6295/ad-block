@@ -354,7 +354,7 @@ bool isThirdPartyHost(const char *baseContextHost, int baseContextHostLen,
   std::string testDomainStr(testHost, testHostLen);
   Domain testDomain(testDomainStr);
 
-  Matcher eTldMatcher = SharedETLDMatcher::GetInstance().Matcher();
+  Matcher eTldMatcher = SharedETLDMatcher::GetInstance().GetMatcher();
   DomainInfo baseHostDomainInfo = eTldMatcher.Match(baseDomain);
   DomainInfo testHostDomainInfo = eTldMatcher.Match(testDomain);
 
