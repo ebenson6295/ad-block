@@ -3,43 +3,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVE_ETLD_MATCHER_H_
-#define BRAVE_ETLD_MATCHER_H_
+#ifndef ETLD_MATCHER_H_
+#define ETLD_MATCHER_H_
 
-#include <iostream>
 #include <string>
-#include <sstream>
 #include <fstream>
-#include "./domain.h"
-#include "./types.h"
-#include "./parser.h"
-#include "./public_suffix_rule.h"
-#include "./public_suffix_rule_set.h"
+#include "etld/domain.h"
+#include "etld/types.h"
+#include "etld/parser.h"
+#include "etld/public_suffix_rule.h"
+#include "etld/public_suffix_rule_set.h"
 
 namespace Brave {
 namespace eTLD {
 
 class Matcher {
-  public:
-    static Matcher FromFilePath(const std::string &file_path) {
-      std::ifstream rule_file;
-      rule_file.open(file_path, std::ifstream::in);
-      return Matcher(rule_file);
-    }
-    Matcher(std::ifstream &rule_file);
-    Matcher(const std::string &rule_text);
-    Matcher(const PublicSuffixParseResult &rules);
+ public:
+  static Matcher FromFilePath(const std::string &file_path) {
+    std::ifstream rule_file;
+    rule_file.open(file_path, std::ifstream::in);
+    return Matcher(rule_file);
+  }
+  explicit Matcher(std::ifstream &rule_file);
+  explicit Matcher(const std::string &rule_text);
+  explicit Matcher(const PublicSuffixParseResult &rules);
 
-    DomainInfo Match(const Domain &domain) const;
+  DomainInfo Match(const Domain &domain) const;
 
-  private:
-    DomainInfo BuildDomainInfo(const PublicSuffixRule &rule, const Domain &domain) const;
-    void ConsumeRules(const PublicSuffixParseResult &rules);
-    PublicSuffixRuleSet exception_rules_;
-    PublicSuffixRuleSet rules_;
+ private:
+  DomainInfo BuildDomainInfo(const PublicSuffixRule &rule,
+    const Domain &domain) const;
+  void ConsumeRules(const PublicSuffixParseResult &rules);
+  PublicSuffixRuleSet exception_rules_;
+  PublicSuffixRuleSet rules_;
 };
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave
 
-#endif
+#endif  // ETLD_MATCHER_H_

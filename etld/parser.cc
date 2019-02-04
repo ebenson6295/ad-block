@@ -4,16 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <vector>
-#include "./parser.h"
-#include "./public_suffix_rule.h"
-#include "./types.h"
+#include "etld/parser.h"
+#include "etld/public_suffix_rule.h"
+#include "etld/types.h"
 
 namespace Brave {
 namespace eTLD {
 
-void PublicSuffixParseResult::AddParseResult(const PublicSuffixTextLineParseResult &result) {
+void PublicSuffixParseResult::AddParseResult(
+    const PublicSuffixTextLineParseResult &result) {
   switch (result.type) {
     case PublicSuffixTextLineTypeRule:
       rules_.push_back(result.rule);
@@ -26,7 +28,7 @@ void PublicSuffixParseResult::AddParseResult(const PublicSuffixTextLineParseResu
     case PublicSuffixTextLineTypeComment:
       num_comment_lines_ += 1;
       break;
-      
+
     case PublicSuffixTextLineTypeInvalidRule:
       num_invalid_rules_ += 1;
       break;
@@ -35,7 +37,6 @@ void PublicSuffixParseResult::AddParseResult(const PublicSuffixTextLineParseResu
       break;
   }
 }
-
 
 PublicSuffixParseResult parse_rule_file(std::ifstream &rule_file) {
   std::vector<PublicSuffixRule> rules;
@@ -89,5 +90,5 @@ PublicSuffixTextLineParseResult parse_rule_line(const std::string &line) {
   return result;
 }
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave

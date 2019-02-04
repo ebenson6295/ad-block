@@ -3,21 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <iostream>
 #include <string>
-#include <map>
-#include "./domain.h"
-#include "./public_suffix_rule.h"
-#include "./public_suffix_rule_set.h"
-#include "./types.h"
-
-using std::cout;
-using std::endl;
+#include "etld/domain.h"
+#include "etld/public_suffix_rule.h"
+#include "etld/public_suffix_rule_set.h"
+#include "etld/types.h"
 
 namespace Brave {
 namespace eTLD {
 
-PublicSuffixRuleSetMatchResult PublicSuffixRuleSet::Match(const Domain &domain) const {
+PublicSuffixRuleSetMatchResult PublicSuffixRuleSet::Match(
+    const Domain &domain) const {
   int longest_length = -1;
   int found_length;
   PublicSuffixRule longest_rule;
@@ -48,5 +44,5 @@ void PublicSuffixRuleSet::AddRule(const PublicSuffixRule &rule) {
   rules_.push_back(rule);
 }
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave

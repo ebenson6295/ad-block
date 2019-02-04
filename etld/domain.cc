@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string>
-#include "./domain.h"
+#include <sstream>
+#include "etld/domain.h"
 
 namespace Brave {
 namespace eTLD {
@@ -35,8 +36,8 @@ Domain::Domain(const std::vector<Label> &labels) {
 std::string Domain::ToString() const {
   std::stringstream as_string;
   auto num_labels = labels_.size();
-  unsigned long i = 0;
-  for (auto &&str : labels_) {
+  size_t i = 0;
+  for (auto &str : labels_) {
     as_string << str;
     if (i != num_labels - 1) {
       as_string << ".";
@@ -46,5 +47,5 @@ std::string Domain::ToString() const {
   return as_string.str();
 }
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave

@@ -24,7 +24,10 @@
 
 static HashFn h(19);
 
-using namespace Brave::eTLD;
+using Brave::eTLD::Domain;
+using Brave::eTLD::SharedETLDMatcher;
+using Brave::eTLD::Matcher;
+using Brave::eTLD::DomainInfo;
 
 const char * getUrlHost(const char *input, int *len);
 
@@ -355,7 +358,7 @@ bool isThirdPartyHost(const char *baseContextHost, int baseContextHostLen,
   DomainInfo baseHostDomainInfo = eTldMatcher.Match(baseDomain);
   DomainInfo testHostDomainInfo = eTldMatcher.Match(testDomain);
 
-  if (baseHostDomainInfo.tld != testHostDomainInfo.tld || 
+  if (baseHostDomainInfo.tld != testHostDomainInfo.tld ||
       baseHostDomainInfo.domain != testHostDomainInfo.domain) {
     return true;
   }
@@ -374,7 +377,7 @@ bool isMatchingHostAnchor(const char *ruleHost, int ruleHostLen,
 
   // If the domain in the rule does not appear at the end of the given
   // host, then do not process further.
-  if ((int)lastSubstrIndex + ruleHostLen != testHostLen) {
+  if (static_cast<int>(lastSubstrIndex) + ruleHostLen != testHostLen) {
     return false;
   }
 

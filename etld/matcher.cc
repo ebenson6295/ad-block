@@ -5,9 +5,9 @@
 
 #include <fstream>
 
-#include "./types.h"
-#include "./parser.h"
-#include "./matcher.h"
+#include "etld/types.h"
+#include "etld/parser.h"
+#include "etld/matcher.h"
 
 namespace Brave {
 namespace eTLD {
@@ -29,9 +29,9 @@ Matcher::Matcher(const PublicSuffixParseResult &rules) {
 // Attempts to implement the algoritms described here:
 //   https://publicsuffix.org/list/
 DomainInfo Matcher::Match(const Domain &domain) const {
-  PublicSuffixRuleSetMatchResult exception_rule_match = exception_rules_.Match(domain);
-  if (exception_rule_match.found_match) {
-    return BuildDomainInfo(exception_rule_match.rule, domain);
+  PublicSuffixRuleSetMatchResult except_match = exception_rules_.Match(domain);
+  if (except_match.found_match) {
+    return BuildDomainInfo(except_match.rule, domain);
   }
 
   PublicSuffixRuleSetMatchResult rule_match = rules_.Match(domain);
@@ -42,7 +42,8 @@ DomainInfo Matcher::Match(const Domain &domain) const {
   return BuildDomainInfo(PublicSuffixRule("*"), domain);
 }
 
-DomainInfo Matcher::BuildDomainInfo(const PublicSuffixRule &rule, const Domain &domain) const {
+DomainInfo Matcher::BuildDomainInfo(const PublicSuffixRule &rule,
+    const Domain &domain) const {
   return rule.Apply(domain);
 }
 
@@ -56,5 +57,5 @@ void Matcher::ConsumeRules(const PublicSuffixParseResult &rules) {
   }
 }
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave

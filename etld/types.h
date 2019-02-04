@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVE_ETLD_TYPES_H_
-#define BRAVE_ETLD_TYPES_H_
+#ifndef ETLD_TYPES_H_
+#define ETLD_TYPES_H_
 
 #include <string>
 
@@ -19,7 +19,7 @@ struct DomainInfo {
 
 typedef std::string Label;
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave
 
-#endif
+#endif  // ETLD_TYPES_H_

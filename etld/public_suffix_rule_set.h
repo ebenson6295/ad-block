@@ -3,14 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVE_ETLD_PUBLIC_SUFFIX_RULE_SET_H_
-#define BRAVE_ETLD_PUBLIC_SUFFIX_RULE_SET_H_
+#ifndef ETLD_PUBLIC_SUFFIX_RULE_SET_H_
+#define ETLD_PUBLIC_SUFFIX_RULE_SET_H_
 
-#include <map>
 #include <string>
 #include <vector>
-#include "./domain.h"
-#include "./public_suffix_rule.h"
+#include "etld/domain.h"
+#include "etld/public_suffix_rule.h"
 
 namespace Brave {
 namespace eTLD {
@@ -21,16 +20,16 @@ struct PublicSuffixRuleSetMatchResult {
 };
 
 class PublicSuffixRuleSet {
-  public:
-    PublicSuffixRuleSet() {};
-    void AddRule(const PublicSuffixRule &rule);
-    PublicSuffixRuleSetMatchResult Match(const Domain &domain) const;
+ public:
+  PublicSuffixRuleSet() {}
+  void AddRule(const PublicSuffixRule &rule);
+  PublicSuffixRuleSetMatchResult Match(const Domain &domain) const;
 
-  private:
-    std::vector<PublicSuffixRule> rules_;
+ private:
+  std::vector<PublicSuffixRule> rules_;
 };
 
-}
-}
+}  // namespace eTLD
+}  // namespace Brave
 
-#endif
+#endif  // ETLD_PUBLIC_SUFFIX_RULE_SET_H_
