@@ -5,7 +5,8 @@
 .PHONY: clean
 
 build:
-	 ./node_modules/.bin/node-gyp configure && ./node_modules/.bin/node-gyp build
+	curl -s https://publicsuffix.org/list/public_suffix_list.dat -o etld/data/public_suffix_list.dat
+	./node_modules/.bin/node-gyp configure && ./node_modules/.bin/node-gyp build
 
 test:
 	./node_modules/node-gyp/gyp/gyp_main.py --generator-output=./build --depth=. -f ninja test/binding.gyp
