@@ -6,6 +6,7 @@
 
 build:
 	curl -s https://publicsuffix.org/list/public_suffix_list.dat -o etld/data/public_suffix_list.dat
+	./etld/data/build.js
 	./node_modules/.bin/node-gyp configure && ./node_modules/.bin/node-gyp build
 
 test:
@@ -28,3 +29,5 @@ perf:
 
 clean:
 	rm -Rf build
+	rm -f etld/data/public_suffix_list.dat
+	rm -f etld/data/public_suffix_list.h

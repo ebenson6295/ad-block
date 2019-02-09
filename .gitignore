@@ -50,3 +50,7 @@ out
 *.swp
 
 .vscode
+
+# These files are either fetched at build time, or generated from the build
+etld/data/public_suffix_list.h
+etld/data/public_suffix_list.dat

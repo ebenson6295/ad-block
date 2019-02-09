@@ -1,0 +1,16 @@
+/* Copyright (c) 2019 The Brave Software Team. Distributed under the MPL2
+ * license. This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef ETLD_DATA_PUBLIC_SUFFIX_LIST_H_
+#define ETLD_DATA_PUBLIC_SUFFIX_LIST_H_
+
+#include <vector>
+#include "etld/public_suffix_rule.h"
+
+using brave_etld::PublicSuffixRuleSerialized;
+
+const std::vector<PublicSuffixRuleSerialized> SHARED_RULES = {contents};
+
+#endif  //  ETLD_DATA_PUBLIC_SUFFIX_LIST_H_

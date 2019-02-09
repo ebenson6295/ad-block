@@ -8,8 +8,7 @@
 
 #include <string>
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 struct DomainInfo {
   std::string tld;
@@ -19,7 +18,6 @@ struct DomainInfo {
 
 typedef std::string Label;
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld
 
 #endif  // ETLD_TYPES_H_

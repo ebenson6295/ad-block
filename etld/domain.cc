@@ -7,8 +7,7 @@
 #include <sstream>
 #include "etld/domain.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 Domain::Domain(const std::string &string) {
   std::size_t current, previous = 0;
@@ -47,5 +46,4 @@ std::string Domain::ToString() const {
   return as_string.str();
 }
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld

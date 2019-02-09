@@ -11,8 +11,7 @@
 #include "etld/domain.h"
 #include "etld/public_suffix_rule.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 struct PublicSuffixRuleSetMatchResult {
   bool found_match;
@@ -29,7 +28,6 @@ class PublicSuffixRuleSet {
   std::vector<PublicSuffixRule> rules_;
 };
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld
 
 #endif  // ETLD_PUBLIC_SUFFIX_RULE_SET_H_

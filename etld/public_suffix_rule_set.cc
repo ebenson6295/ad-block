@@ -9,8 +9,7 @@
 #include "etld/public_suffix_rule_set.h"
 #include "etld/types.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 PublicSuffixRuleSetMatchResult PublicSuffixRuleSet::Match(
     const Domain &domain) const {
@@ -44,5 +43,4 @@ void PublicSuffixRuleSet::AddRule(const PublicSuffixRule &rule) {
   rules_.push_back(rule);
 }
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld

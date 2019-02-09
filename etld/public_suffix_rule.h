@@ -9,33 +9,38 @@
 #include <string>
 #include <vector>
 #include <exception>
-#include "./domain.h"
-#include "./types.h"
+#include "etld/domain.h"
+#include "etld/types.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
-class PublicSuffixRuleInputException : public std::exception {
- public:
-  explicit PublicSuffixRuleInputException(const char * message) :
-    msg_(message) {}
-  explicit PublicSuffixRuleInputException(const std::string &message) :
-    msg_(message) {}
-  virtual const char* what() const throw() {
-    return msg_.c_str();
-  }
-  virtual ~PublicSuffixRuleInputException() throw() {}
+struct PublicSuffixRuleSerialized {
+  explicit PublicSuffixRuleSerialized(const std::vector<Label> &labels) :
+      is_wildcard(false),
+      is_exception(false),
+      labels(labels) {}
 
- protected:
-  std::string msg_;
+  PublicSuffixRuleSerialized(
+    bool is_wildcard,
+    bool is_exception,
+    const std::vector<Label> &labels) :
+      is_wildcard(is_wildcard),
+      is_exception(is_exception),
+      labels(labels) {}
+
+  bool is_wildcard;
+  bool is_exception;
+  const std::vector<Label> &labels;
 };
 
 class PublicSuffixRule {
  public:
   PublicSuffixRule() {}
-  explicit PublicSuffixRule(const std::string &rule_text);
-  explicit PublicSuffixRule(std::vector<Label> labels, bool is_exception,
-      bool is_wildcard) :
+  explicit PublicSuffixRule(const PublicSuffixRuleSerialized &serialized_rule);
+  explicit PublicSuffixRule(
+      std::vector<Label> labels,
+      bool is_exception = false,
+      bool is_wildcard = false) :
     labels_(labels),
     is_exception_(is_exception),
     is_wildcard_(is_wildcard) {}
@@ -65,7 +70,6 @@ class PublicSuffixRule {
   bool is_wildcard_ = false;
 };
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld
 
 #endif  // ETLD_PUBLIC_SUFFIX_RULE_H_

@@ -9,7 +9,7 @@
 #include <iostream>
 #include <set>
 #include <string>
-#include "./etld/shared_matcher.h"
+#include "etld/shared_matcher.h"
 
 #ifdef ENABLE_REGEX
 #include <regex> // NOLINT
@@ -24,10 +24,10 @@
 
 static HashFn h(19);
 
-using Brave::eTLD::Domain;
-using Brave::eTLD::SharedETLDMatcher;
-using Brave::eTLD::Matcher;
-using Brave::eTLD::DomainInfo;
+using brave_etld::Domain;
+using brave_etld::SharedETLDMatcher;
+using brave_etld::Matcher;
+using brave_etld::DomainInfo;
 
 const char * getUrlHost(const char *input, int *len);
 

@@ -6,11 +6,11 @@
 #ifndef ETLD_SHARED_MATCHER_H_
 #define ETLD_SHARED_MATCHER_H_
 
-#include "./matcher.h"
-#include "./types.h"
+#include "etld/matcher.h"
+#include "etld/types.h"
+#include "etld/data/public_suffix_list.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 class SharedETLDMatcher {
  public:
@@ -27,11 +27,9 @@ class SharedETLDMatcher {
 
  private:
   SharedETLDMatcher() {}
-  Brave::eTLD::Matcher matcher_ = Matcher::FromFilePath(
-    "./etld/data/public_suffix_list.dat");
+  Matcher matcher_ = Matcher(SHARED_RULES);
 };
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld
 
 #endif  // ETLD_SHARED_MATCHER_H_

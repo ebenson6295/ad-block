@@ -10,8 +10,7 @@
 #include <vector>
 #include "etld/types.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 class Domain {
  public:
@@ -32,7 +31,6 @@ class Domain {
   std::vector<Label> labels_;
 };
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld
 
 #endif  // ETLD_DOMAIN_H_

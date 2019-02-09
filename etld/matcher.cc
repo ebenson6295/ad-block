@@ -6,23 +6,20 @@
 #include <fstream>
 
 #include "etld/types.h"
-#include "etld/parser.h"
+#include "etld/public_suffix_rule.h"
 #include "etld/matcher.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
-Matcher::Matcher(std::ifstream &rule_file) {
-  PublicSuffixParseResult rules = parse_rule_file(rule_file);
+Matcher::Matcher(const std::vector<PublicSuffixRule> &rules) {
   ConsumeRules(rules);
 }
 
-Matcher::Matcher(const std::string &rule_text) {
-  PublicSuffixParseResult rules = parse_rule_text(rule_text);
-  ConsumeRules(rules);
-}
-
-Matcher::Matcher(const PublicSuffixParseResult &rules) {
+Matcher::Matcher(const std::vector<PublicSuffixRuleSerialized> &serialized_rules) {
+  std::vector<PublicSuffixRule> rules;
+  for (auto &elm : serialized_rules) {
+    rules.push_back(PublicSuffixRule(elm));
+  }
   ConsumeRules(rules);
 }
 
@@ -39,7 +36,7 @@ DomainInfo Matcher::Match(const Domain &domain) const {
     return BuildDomainInfo(rule_match.rule, domain);
   }
 
-  return BuildDomainInfo(PublicSuffixRule("*"), domain);
+  return BuildDomainInfo(PublicSuffixRule({"*"}), domain);
 }
 
 DomainInfo Matcher::BuildDomainInfo(const PublicSuffixRule &rule,
@@ -47,8 +44,8 @@ DomainInfo Matcher::BuildDomainInfo(const PublicSuffixRule &rule,
   return rule.Apply(domain);
 }
 
-void Matcher::ConsumeRules(const PublicSuffixParseResult &rules) {
-  for (auto &elm : rules.Rules()) {
+void Matcher::ConsumeRules(const std::vector<PublicSuffixRule> &rules) {
+  for (auto &elm : rules) {
     if (elm.IsException()) {
       exception_rules_.AddRule(elm);
     } else {
@@ -57,5 +54,4 @@ void Matcher::ConsumeRules(const PublicSuffixParseResult &rules) {
   }
 }
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld

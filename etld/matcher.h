@@ -8,37 +8,30 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
 #include "etld/domain.h"
 #include "etld/types.h"
-#include "etld/parser.h"
 #include "etld/public_suffix_rule.h"
 #include "etld/public_suffix_rule_set.h"
 
-namespace Brave {
-namespace eTLD {
+namespace brave_etld {
 
 class Matcher {
  public:
-  static Matcher FromFilePath(const std::string &file_path) {
-    std::ifstream rule_file;
-    rule_file.open(file_path, std::ifstream::in);
-    return Matcher(rule_file);
-  }
-  explicit Matcher(std::ifstream &rule_file);
-  explicit Matcher(const std::string &rule_text);
-  explicit Matcher(const PublicSuffixParseResult &rules);
+  explicit Matcher(const std::vector<PublicSuffixRule> &rules);
+  explicit Matcher(
+    const std::vector<PublicSuffixRuleSerialized> &serialized_rules);
 
   DomainInfo Match(const Domain &domain) const;
 
  private:
   DomainInfo BuildDomainInfo(const PublicSuffixRule &rule,
     const Domain &domain) const;
-  void ConsumeRules(const PublicSuffixParseResult &rules);
+  void ConsumeRules(const std::vector<PublicSuffixRule> &rules);
   PublicSuffixRuleSet exception_rules_;
   PublicSuffixRuleSet rules_;
 };
 
-}  // namespace eTLD
-}  // namespace Brave
+}  // namespace brave_etld
 
 #endif  // ETLD_MATCHER_H_
